@@ -297,10 +297,8 @@ TocItem* CloneTocItemRecur(TocItem* ti, bool removeUnchecked) {
     return res;
 }
 
-TocTree* CloneTocTree(TocTree* tree, bool removeUnchecked) {
-    TocTree* res = new TocTree();
-    res->root = CloneTocItemRecur(tree->root, removeUnchecked);
-    return res;
+TocItem* CloneTocTree(TocItem* tree, bool removeUnchecked) {
+    return CloneTocItemRecur(tree, removeUnchecked);
 }
 
 WCHAR* TocItem::Text() {
@@ -357,33 +355,6 @@ bool TocItem::PageNumbersMatch() const {
     return true;
 }
 
-TocTree::TocTree(TocItem* root) {
-    this->root = root;
-}
-
-TocTree::~TocTree() {
-    delete root;
-}
-
-int TocTree::RootCount() {
-    int n = 0;
-    auto node = root;
-    while (node) {
-        n++;
-        node = node->next;
-    }
-    return n;
-}
-
-TreeItem* TocTree::RootAt(int n) {
-    auto node = root;
-    while (n > 0) {
-        n--;
-        node = node->next;
-    }
-    return node;
-}
-
 RenderPageArgs::RenderPageArgs(int pageNo, float zoom, int rotation, RectD* pageRect, RenderTarget target,
                                AbortCookie** cookie_out) {
     this->pageNo = pageNo;
@@ -436,11 +407,11 @@ PageDestination* EngineBase::GetNamedDest(const WCHAR* name) {
 }
 
 bool EngineBase::HacToc() {
-    TocTree* tree = GetToc();
+    TocItem* tree = GetToc();
     return tree != nullptr;
 }
 
-TocTree* EngineBase::GetToc() {
+TocItem* EngineBase::GetToc() {
     return nullptr;
 }
 

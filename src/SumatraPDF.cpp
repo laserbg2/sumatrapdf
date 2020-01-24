@@ -516,7 +516,7 @@ static void UpdateSidebarDisplayState(WindowInfo* win, TabInfo* tab, DisplayStat
 
     ds->showToc = tab->showToc;
     if (win->tocLoaded && tab == win->currentTab) {
-        TocTree* tocTree = tab->ctrl->GetToc();
+        TocItem* tocTree = tab->ctrl->GetToc();
         UpdateTocExpansionState(tab->tocState, win->tocTreeCtrl, tocTree);
     }
     *ds->tocState = tab->tocState;

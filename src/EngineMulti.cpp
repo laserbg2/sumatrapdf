@@ -64,7 +64,7 @@ class EngineMulti : public EngineBase {
     RenderedBitmap* GetImageForPageElement(PageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    TocTree* GetToc() override;
+    TocItem* GetToc() override;
 
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
@@ -77,7 +77,7 @@ class EngineMulti : public EngineBase {
     VbkmFile vbkm;
     Vec<EnginePage> pageToEngine;
 
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
 };
 
 EngineBase* EngineMulti::PageToEngine(int& pageNo) const {
@@ -209,7 +209,7 @@ static void updateTocItemsPageNo(TocItem* i, int nPageNoAdd) {
     }
 }
 
-TocTree* EngineMulti::GetToc() {
+TocItem* EngineMulti::GetToc() {
     CrashIf(!tocTree);
     return tocTree;
 }
@@ -331,7 +331,7 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     for (auto&& vbkm : vbkm.vbkms) {
         CrashIf(vbkm->filePath.empty());
 
-        TocItem* child = vbkm->toc->root;
+        TocItem* child = vbkm->toc;
         if (child->isUnchecked) {
             continue;
         }
@@ -389,7 +389,7 @@ bool EngineMulti::Load(const WCHAR* fileName, PasswordUI* pwdUI) {
     TocItem* rootCopy = CloneTocItemRecur(root, true);
     delete root;
 
-    tocTree = new TocTree(rootCopy);
+    tocTree = rootCopy;
     pageCount = nTotalPages;
     SetFileName(fileName);
 

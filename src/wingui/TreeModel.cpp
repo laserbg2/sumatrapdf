@@ -23,13 +23,6 @@ static bool VisitTreeItemRec(TreeItem* ti, const TreeItemVisitor& visitor) {
     return true;
 }
 
-bool VisitTreeModelItems(TreeModel* tm, const TreeItemVisitor& visitor) {
-    int n = tm->RootCount();
-    for (int i = 0; i < n; i++) {
-        auto* ti = tm->RootAt(i);
-        if (!VisitTreeItemRec(ti, visitor)) {
-            return false;
-        }
-    }
-    return true;
+bool VisitTreeModelItems(TreeItem* ti, const TreeItemVisitor& visitor) {
+    return VisitTreeItemRec(ti, visitor);
 }

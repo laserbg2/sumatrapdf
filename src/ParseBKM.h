@@ -8,7 +8,7 @@ struct VbkmForFile {
     // TODO: serialize nPages after "file:"
     int nPages = 0;
 
-    TocTree* toc = nullptr;
+    TocItem* toc = nullptr;
 
     EngineBase* engine = nullptr;
 

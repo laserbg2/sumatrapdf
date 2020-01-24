@@ -326,7 +326,7 @@ class EnginePs : public EngineBase {
         return pdfEngine->GetNamedDest(name);
     }
 
-    TocTree* GetToc() override {
+    TocItem* GetToc() override {
         return pdfEngine->GetToc();
     }
 

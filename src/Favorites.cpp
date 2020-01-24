@@ -90,28 +90,6 @@ bool FavTreeItem::IsChecked() {
     return false;
 }
 
-struct FavTreeModel : public TreeModel {
-    ~FavTreeModel() override;
-
-    int RootCount() override;
-    TreeItem* RootAt(int) override;
-
-    Vec<FavTreeItem*> children;
-};
-
-FavTreeModel::~FavTreeModel() {
-    DeleteVecMembers(children);
-}
-
-int FavTreeModel::RootCount() {
-    size_t n = children.size();
-    return (int)n;
-}
-
-TreeItem* FavTreeModel::RootAt(int n) {
-    return children[n];
-}
-
 Favorite* Favorites::GetByMenuId(int menuId, DisplayState** dsOut) {
     DisplayState* ds;
     for (size_t i = 0; (ds = gFileHistory.Get(i)) != nullptr; i++) {
@@ -543,8 +521,8 @@ static void MakeFavSecondLevel(FavTreeItem* parent, DisplayState* f) {
     }
 }
 
-static FavTreeModel* BuildFavTreeModel(WindowInfo* win) {
-    auto* res = new FavTreeModel();
+static FavTreeItem* BuildFavTreeModel(WindowInfo* win) {
+    FavTreeItem* res = nullptr;
     Vec<const WCHAR*> filePathsSorted;
     GetSortedFilePaths(filePathsSorted);
     for (size_t i = 0; i < filePathsSorted.size(); i++) {
@@ -564,19 +542,19 @@ void PopulateFavTreeIfNeeded(WindowInfo* win) {
     if (treeCtrl->treeModel) {
         return;
     }
-    TreeModel* tm = BuildFavTreeModel(win);
+    FavTreeItem* tm = BuildFavTreeModel(win);
     treeCtrl->SetTreeModel(tm);
 }
 
 void UpdateFavoritesTree(WindowInfo* win) {
     TreeCtrl* treeCtrl = win->favTreeCtrl;
     auto* prevModel = treeCtrl->treeModel;
-    TreeModel* newModel = BuildFavTreeModel(win);
+    FavTreeItem* newModel = BuildFavTreeModel(win);
     treeCtrl->SetTreeModel(newModel);
     delete prevModel;
 
     // hide the favorites tree if we've removed the last favorite
-    if (0 == newModel->RootCount()) {
+    if (0 == newModel->ChildCount()) {
         SetSidebarVisibility(win, win->tocVisible, false);
     }
 }
@@ -640,7 +618,7 @@ void AddFavoriteForCurrentPage(WindowInfo* win, int pageNo) {
     if (ctrl->HacToc()) {
         // use the current ToC heading as default name
         auto* docTree = ctrl->GetToc();
-        TocItem* root = docTree->root;
+        TocItem* root = docTree;
         TocItem* item = TocItemForPageNo(root, pageNo);
         if (item) {
             name.SetCopy(item->title);
@@ -671,14 +649,17 @@ void DelFavorite(const WCHAR* filePath, int pageNo) {
 void RememberFavTreeExpansionState(WindowInfo* win) {
     win->expandedFavorites.clear();
     TreeCtrl* treeCtrl = win->favTreeCtrl;
-    TreeModel* tm = treeCtrl ? treeCtrl->treeModel : nullptr;
+    FavTreeItem* tm = nullptr;
+    if (treeCtrl) {
+        tm = (FavTreeItem*)treeCtrl->treeModel;
+    }
     if (!tm) {
         // TODO: remember all favorites as expanded
         return;
     }
-    int n = tm->RootCount();
+    int n = tm->ChildCount();
     for (int i = 0; i < n; i++) {
-        TreeItem* ti = tm->RootAt(i);
+        TreeItem* ti = tm->ChildAt(i);
         bool isExpanded = treeCtrl->IsExpanded(ti);
         if (isExpanded) {
             FavTreeItem* fti = (FavTreeItem*)ti;

@@ -283,7 +283,7 @@ static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
         return false;
     }
 #endif
-    auto tree = new TocTree();
+    TocItem* tree = nullptr;
     // tree->name = str::Dup(title.val);
     size_t indent = 0;
     std::string_view line;
@@ -312,7 +312,7 @@ static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
         return false;
     }
 
-    tree->root = items[0].item;
+    tree = items[0].item;
 
     /* We want to reconstruct tree from array
         a
@@ -343,7 +343,7 @@ static bool parseVbkmSection(std::string_view sv, Vec<VbkmForFile*>& bkmsOut) {
                 }
             }
             if (!didFound) {
-                tree->root->AddSibling(item);
+                tree->AddSibling(item);
             }
         }
     }
@@ -397,8 +397,8 @@ bool ExportBookmarksToFile(const Vec<VbkmForFile*>& bookmarks, const char* name,
         s.AppendFmt("file: %s\n", path);
         CrashIf(vbkm->nPages < 1);
         s.AppendFmt("pages: %d\n", vbkm->nPages);
-        TocTree* tocTree = vbkm->toc;
-        SerializeBookmarksRec(tocTree->root, 0, s);
+        TocItem* tocTree = vbkm->toc;
+        SerializeBookmarksRec(tocTree, 0, s);
     }
     return file::WriteFile(bkmPath, s.as_view());
 }

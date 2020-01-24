@@ -298,7 +298,7 @@ class EnginePdf : public EngineBase {
     RenderedBitmap* GetImageForPageElement(PageElement*) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    TocTree* GetToc() override;
+    TocItem* GetToc() override;
 
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
@@ -328,7 +328,7 @@ class EnginePdf : public EngineBase {
 
     Vec<PageAnnotation> userAnnots; // TODO(port): put in PageInfo
 
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName, PasswordUI* pwdUI = nullptr);
     bool Load(IStream* stream, PasswordUI* pwdUI = nullptr);
@@ -915,7 +915,7 @@ TocItem* EnginePdf::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCo
 }
 
 // TODO: maybe build in FinishDownload
-TocTree* EnginePdf::GetToc() {
+TocItem* EnginePdf::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -933,16 +933,16 @@ TocTree* EnginePdf::GetToc() {
         if (!root) {
             return nullptr;
         }
-        tocTree = new TocTree(root);
+        tocTree = root;
         return tocTree;
     }
     TocItem* att = BuildTocTree(nullptr, attachments, idCounter, true);
     if (!root) {
-        tocTree = new TocTree(att);
+        tocTree = att;
         return tocTree;
     }
     root->AddSibling(att);
-    tocTree = new TocTree(root);
+    tocTree = root;
     return tocTree;
 }
 

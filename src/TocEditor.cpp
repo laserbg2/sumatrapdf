@@ -43,7 +43,7 @@ struct TocEditorWindow {
     ILayout* layoutButtons = nullptr;
 
     TreeCtrl* treeCtrl = nullptr;
-    TreeModel* treeModel = nullptr;
+    TreeItem* treeModel = nullptr;
 
     bool canRemovePdf = false;
 
@@ -126,7 +126,7 @@ static void UpdateTreeModel(TocEditorWindow* w) {
         AutoFreeWstr path = strconv::Utf8ToWstr(vbkm->filePath.as_view());
         const WCHAR* name = path::GetBaseNameNoFree(path);
         ti->title = str::Dup(name);
-        ti->child = vbkm->toc->root;
+        ti->child = vbkm->toc;
         ti->child->parent = ti->child;
 
         CalcEndPageNo(ti->child, vbkm->nPages);
@@ -139,7 +139,7 @@ static void UpdateTreeModel(TocEditorWindow* w) {
             curr = ti;
         }
     }
-    w->treeModel = new TocTree(root);
+    w->treeModel = root;
     treeCtrl->SetTreeModel(w->treeModel);
 }
 
@@ -173,7 +173,7 @@ static void AddPdf() {
         ShowErrorMessage("Failed to open a file!");
         return;
     }
-    TocTree* tocTree = engine->GetToc();
+    TocItem* tocTree = engine->GetToc();
     if (nullptr == tocTree) {
         // TODO: maybe add a dummy entry for the first page
         // or make top-level act as first page destination

@@ -245,19 +245,7 @@ struct TocItem : TreeItem {
 
 TocItem* CloneTocItemRecur(TocItem*, bool);
 
-struct TocTree : TreeModel {
-    TocItem* root = nullptr;
-
-    TocTree() = default;
-    TocTree(TocItem* root);
-    ~TocTree() override;
-
-    // TreeModel
-    int RootCount() override;
-    TreeItem* RootAt(int n) override;
-};
-
-TocTree* CloneTocTree(TocTree*, bool removeUnchecked);
+TocItem* CloneTocTree(TocItem*, bool removeUnchecked);
 
 // a helper that allows for rendering interruptions in an engine-agnostic way
 class AbortCookie {
@@ -386,7 +374,7 @@ class EngineBase {
 
     // returns the root element for the loaded document's Table of Contents
     // caller must delete the result (when no longer needed)
-    virtual TocTree* GetToc();
+    virtual TocItem* GetToc();
 
     // checks whether this document has explicit labels for pages (such as
     // roman numerals) instead of the default plain arabic numbering

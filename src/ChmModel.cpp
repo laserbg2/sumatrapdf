@@ -505,7 +505,7 @@ PageDestination* ChmModel::GetNamedDest(const WCHAR* name) {
     return nullptr;
 }
 
-TocTree* ChmModel::GetToc() {
+TocItem* ChmModel::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -533,11 +533,7 @@ TocTree* ChmModel::GetToc() {
         }
         nextChild = &item->child;
     }
-    if (!root) {
-        return nullptr;
-    }
-    tocTree = new TocTree(root);
-    return tocTree;
+    return root;
 }
 
 // adapted from DisplayModel::NextZoomStep

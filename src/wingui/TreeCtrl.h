@@ -125,8 +125,9 @@ struct TreeCtrl : public WindowBase {
     TreeItem* draggedItem = nullptr;
     TreeItem* dragTargetItem = nullptr;
 
-    // treeModel not owned by us
-    TreeModel* treeModel = nullptr;
+    // treeModel is root of the tree
+    // not owned by us
+    TreeItem* treeModel = nullptr;
 
     // for all WM_NOTIFY messages
     TreeNotifyHandler onTreeNotify = nullptr;
@@ -176,7 +177,7 @@ struct TreeCtrl : public WindowBase {
 
     void Clear();
 
-    void SetTreeModel(TreeModel*);
+    void SetTreeModel(TreeItem*);
 
     str::WStr GetDefaultTooltip(TreeItem*);
     TreeItem* GetSelection();

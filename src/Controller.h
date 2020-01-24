@@ -74,7 +74,7 @@ class Controller {
         auto* tree = GetToc();
         return tree != nullptr;
     }
-    virtual TocTree* GetToc() = 0;
+    virtual TocItem* GetToc() = 0;
     virtual void ScrollToLink(PageDestination* dest) = 0;
     virtual PageDestination* GetNamedDest(const WCHAR* name) = 0;
 

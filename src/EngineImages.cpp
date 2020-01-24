@@ -675,7 +675,7 @@ class EngineImageDir : public EngineImages {
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
 
-    TocTree* GetToc() override;
+    TocItem* GetToc() override;
 
     bool SaveFileAsPDF(const char* pdfFileName, bool includeUserAnnots = false) override;
 
@@ -688,7 +688,7 @@ class EngineImageDir : public EngineImages {
     RectD LoadMediabox(int pageNo) override;
 
     WStrVec pageFileNames;
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
 };
 
 bool EngineImageDir::LoadImageDir(const WCHAR* dirName) {
@@ -753,7 +753,7 @@ static TocItem* newImageDirTocItem(TocItem* parent, WCHAR* title, int pageNo) {
     return new TocItem(parent, title, pageNo);
 };
 
-TocTree* EngineImageDir::GetToc() {
+TocItem* EngineImageDir::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -766,8 +766,7 @@ TocTree* EngineImageDir::GetToc() {
         item->id = i;
         root->AddSibling(item);
     }
-    tocTree = new TocTree(root);
-    return tocTree;
+    return root;
 }
 
 bool EngineImageDir::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
@@ -854,7 +853,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
 
     const WCHAR* GetDefaultFileExt() const;
 
-    TocTree* GetToc() override;
+    TocItem* GetToc() override;
 
     // json::ValueVisitor
     bool Visit(const char* path, const char* value, json::DataType type) override;
@@ -879,7 +878,7 @@ class EngineCbx : public EngineImages, public json::ValueVisitor {
     // access to cbxFile must be protected after initialization (with cacheAccess)
     MultiFormatArchive* cbxFile = nullptr;
     Vec<MultiFormatArchive::FileInfo*> files;
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
 
     // not owned
     const WCHAR* defaultExt = nullptr;
@@ -1048,7 +1047,7 @@ bool EngineCbx::FinishLoading() {
             curr = ti;
         }
     }
-    tocTree = new TocTree(root);
+    tocTree = root;
 
     for (int i = 0; i < pageCount; i++) {
         size_t fileId = files[i]->fileId;
@@ -1065,7 +1064,7 @@ bool EngineCbx::FinishLoading() {
     return true;
 }
 
-TocTree* EngineCbx::GetToc() {
+TocItem* EngineCbx::GetToc() {
     return tocTree;
 }
 

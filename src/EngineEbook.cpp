@@ -732,7 +732,7 @@ class EngineEpub : public EngineEbook {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
-    TocTree* GetToc() override;
+    TocItem* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -740,7 +740,7 @@ class EngineEpub : public EngineEbook {
   protected:
     EpubDoc* doc = nullptr;
     IStream* stream = nullptr;
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
@@ -845,18 +845,14 @@ bool EngineEpub::SaveFileAs(const char* copyFileName, bool includeUserAnnots) {
     return CopyFileW(fileName, dstPath, FALSE);
 }
 
-TocTree* EngineEpub::GetToc() {
+TocItem* EngineEpub::GetToc() {
     if (tocTree) {
         return tocTree;
     }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     TocItem* root = builder.GetRoot();
-    if (!root) {
-        return nullptr;
-    }
-    tocTree = new TocTree(root);
-    return tocTree;
+    return root;
 }
 
 EngineBase* EngineEpub::CreateFromFile(const WCHAR* fileName) {
@@ -917,14 +913,14 @@ class EngineFb2 : public EngineEbook {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
-    TocTree* GetToc() override;
+    TocItem* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
     Fb2Doc* doc = nullptr;
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
@@ -969,18 +965,14 @@ bool EngineFb2::FinishLoading() {
     return pageCount > 0;
 }
 
-TocTree* EngineFb2::GetToc() {
+TocItem* EngineFb2::GetToc() {
     if (tocTree) {
         return tocTree;
     }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     TocItem* root = builder.GetRoot();
-    if (!root) {
-        return nullptr;
-    }
-    tocTree = new TocTree(root);
-    return tocTree;
+    return root;
 }
 
 EngineBase* EngineFb2::CreateFromFile(const WCHAR* fileName) {
@@ -1040,14 +1032,14 @@ class EngineMobi : public EngineEbook {
     }
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    TocTree* GetToc() override;
+    TocItem* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
 
   protected:
     MobiDoc* doc = nullptr;
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
@@ -1125,18 +1117,14 @@ PageDestination* EngineMobi::GetNamedDest(const WCHAR* name) {
     return newSimpleDest(pageNo, rect);
 }
 
-TocTree* EngineMobi::GetToc() {
+TocItem* EngineMobi::GetToc() {
     if (tocTree) {
         return tocTree;
     }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
     TocItem* root = builder.GetRoot();
-    if (!root) {
-        return nullptr;
-    }
-    tocTree = new TocTree(root);
-    return tocTree;
+    return root;
 }
 
 EngineBase* EngineMobi::CreateFromFile(const WCHAR* fileName) {
@@ -1193,13 +1181,13 @@ class EnginePdb : public EngineEbook {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
-    TocTree* GetToc() override;
+    TocItem* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
 
   protected:
     PalmDoc* doc = nullptr;
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
 };
@@ -1231,15 +1219,14 @@ bool EnginePdb::Load(const WCHAR* fileName) {
     return pageCount > 0;
 }
 
-TocTree* EnginePdb::GetToc() {
+TocItem* EnginePdb::GetToc() {
     if (tocTree) {
         return tocTree;
     }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    auto* root = builder.GetRoot();
-    tocTree = new TocTree(root);
-    return tocTree;
+    TocItem* root = builder.GetRoot();
+    return root;
 }
 
 EngineBase* EnginePdb::CreateFromFile(const WCHAR* fileName) {
@@ -1411,14 +1398,14 @@ class EngineChm : public EngineEbook {
     }
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    TocTree* GetToc() override;
+    TocItem* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
 
   protected:
     ChmDoc* doc = nullptr;
     ChmDataCache* dataCache = nullptr;
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
 
@@ -1572,7 +1559,7 @@ PageDestination* EngineChm::GetNamedDest(const WCHAR* name) {
     return dest;
 }
 
-TocTree* EngineChm::GetToc() {
+TocItem* EngineChm::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -1587,11 +1574,7 @@ TocTree* EngineChm::GetToc() {
         doc->ParseIndex(&builder);
     }
     TocItem* root = builder.GetRoot();
-    if (!root) {
-        return nullptr;
-    }
-    tocTree = new TocTree(root);
-    return tocTree;
+    return root;
 }
 
 static PageDestination* newChmEmbeddedDest(const char* path) {
@@ -1768,13 +1751,13 @@ class EngineTxt : public EngineEbook {
         return prop != DocumentProperty::FontList ? doc->GetProperty(prop) : ExtractFontList();
     }
 
-    TocTree* GetToc() override;
+    TocItem* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
 
   protected:
     TxtDoc* doc = nullptr;
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
 };
@@ -1817,16 +1800,14 @@ bool EngineTxt::Load(const WCHAR* fileName) {
     return pageCount > 0;
 }
 
-TocTree* EngineTxt::GetToc() {
+TocItem* EngineTxt::GetToc() {
     if (tocTree) {
         return tocTree;
     }
     EbookTocBuilder builder(this);
     doc->ParseToc(&builder);
-    auto* root = builder.GetRoot();
-
-    tocTree = new TocTree(root);
-    return tocTree;
+    TocItem* root = builder.GetRoot();
+    return root;
 }
 
 EngineBase* EngineTxt::CreateFromFile(const WCHAR* fileName) {

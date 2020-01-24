@@ -828,7 +828,7 @@ class EbookTocCollector : public EbookTocVisitor {
     }
 };
 
-TocTree* EbookController::GetToc() {
+TocItem* EbookController::GetToc() {
     if (tocTree) {
         return tocTree;
     }
@@ -838,8 +838,7 @@ TocTree* EbookController::GetToc() {
     if (!root) {
         return nullptr;
     }
-    tocTree = new TocTree(root);
-    return tocTree;
+    return root;
 }
 
 void EbookController::ScrollToLink(PageDestination* dest) {

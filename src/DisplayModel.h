@@ -105,7 +105,7 @@ class DisplayModel : public Controller {
     void SetViewPortSize(SizeI size) override;
 
     // table of contents
-    TocTree* GetToc() override {
+    TocItem* GetToc() override {
         if (!engine) {
             return false;
         }

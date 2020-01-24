@@ -259,7 +259,7 @@ class EngineDjVu : public EngineBase {
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    TocTree* GetToc() override;
+    TocItem* GetToc() override;
 
     WCHAR* GetPageLabel(int pageNo) const override;
     int GetPageByLabel(const WCHAR* label) const override;
@@ -275,7 +275,7 @@ class EngineDjVu : public EngineBase {
     ddjvu_document_t* doc = nullptr;
     miniexp_t outline = miniexp_nil;
     miniexp_t* annos = nullptr;
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
     Vec<PageAnnotation> userAnnots;
 
     Vec<ddjvu_fileinfo_t> fileInfos;
@@ -1147,7 +1147,7 @@ TocItem* EngineDjVu::BuildTocTree(TocItem* parent, miniexp_t entry, int& idCount
     return node;
 }
 
-TocTree* EngineDjVu::GetToc() {
+TocItem* EngineDjVu::GetToc() {
     if (outline == miniexp_nil) {
         return nullptr;
     }
@@ -1158,11 +1158,7 @@ TocTree* EngineDjVu::GetToc() {
     ScopedCritSec scope(&gDjVuContext->lock);
     int idCounter = 0;
     TocItem* root = BuildTocTree(nullptr, outline, idCounter);
-    if (!root) {
-        return nullptr;
-    }
-    tocTree = new TocTree(root);
-    return tocTree;
+    return root;
 }
 
 WCHAR* EngineDjVu::GetPageLabel(int pageNo) const {

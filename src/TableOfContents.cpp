@@ -246,7 +246,7 @@ static TreeItem* TreeItemForPageNo(TreeCtrl* treeCtrl, int pageNo) {
     TocItem* bestMatch = nullptr;
     int bestMatchPageNo = 0;
 
-    TreeModel* tm = treeCtrl->treeModel;
+    TreeItem* tm = treeCtrl->treeModel;
     if (!tm) {
         return nullptr;
     }
@@ -304,13 +304,13 @@ static void UpdateDocTocExpansionStateRecur(TreeCtrl* treeCtrl, Vec<int>& tocSta
     }
 }
 
-void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, TocTree* docTree) {
+void UpdateTocExpansionState(Vec<int>& tocState, TreeCtrl* treeCtrl, TocItem* docTree) {
     if (treeCtrl->treeModel != docTree) {
         // CrashMe();
         return;
     }
     tocState.Reset();
-    TocItem* tocItem = docTree->root;
+    TocItem* tocItem = docTree;
     UpdateDocTocExpansionStateRecur(treeCtrl, tocState, tocItem);
 }
 
@@ -428,7 +428,7 @@ static void StartTocEditorForWindowInfo(WindowInfo* win) {
         bkms->filePath = filePath.release();
         bkms->nPages = tab->ctrl->PageCount();
 
-        TocTree* tree = (TocTree*)win->tocTreeCtrl->treeModel;
+        TocItem* tree = (TocItem*)win->tocTreeCtrl->treeModel;
         bkms->toc = CloneTocTree(tree, false);
         args->bookmarks.push_back(bkms);
     }
@@ -516,7 +516,7 @@ static void TocContextMenu(ContextMenuArgs* args) {
 }
 
 static void AltBookmarksChanged(WindowInfo* win, TabInfo* tab, int n, std::string_view s) {
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
     if (n == 0) {
         tocTree = tab->ctrl->GetToc();
     } else {
@@ -574,7 +574,7 @@ void LoadTocTree(WindowInfo* win) {
     win->tocLoaded = true;
 
     auto* tocTree = tab->ctrl->GetToc();
-    if (!tocTree || !tocTree->root) {
+    if (!tocTree) {
         return;
     }
 
@@ -601,7 +601,7 @@ void LoadTocTree(WindowInfo* win) {
     // consider a ToC tree right-to-left if a more than half of the
     // alphabetic characters are in a right-to-left script
     int l2r = 0, r2l = 0;
-    GetLeftRightCounts(tocTree->root, l2r, r2l);
+    GetLeftRightCounts(tocTree, l2r, r2l);
     bool isRTL = r2l > l2r;
 
     TreeCtrl* treeCtrl = win->tocTreeCtrl;
@@ -609,8 +609,8 @@ void LoadTocTree(WindowInfo* win) {
     SetRtl(hwnd, isRTL);
 
     UpdateTreeCtrlColors(win);
-    SetInitialExpandState(tocTree->root, tab->tocState);
-    tocTree->root->OpenSingleNode();
+    SetInitialExpandState(tocTree, tab->tocState);
+    tocTree->OpenSingleNode();
 
     treeCtrl->SetTreeModel(tocTree);
 

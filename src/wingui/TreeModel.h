@@ -16,16 +16,8 @@ struct TreeItem {
     virtual bool IsChecked() = 0;
 };
 
-// TreeModel provides data to TreeCtrl
-struct TreeModel {
-    virtual ~TreeModel(){};
-
-    virtual int RootCount() = 0;
-    virtual TreeItem* RootAt(int) = 0;
-};
-
 // function called for every item in the TreeModel
 // return false to stop iteration
 typedef std::function<bool(TreeItem*)> TreeItemVisitor;
 
-bool VisitTreeModelItems(TreeModel* tm, const TreeItemVisitor& visitor);
+bool VisitTreeModelItems(TreeItem* tm, const TreeItemVisitor& visitor);

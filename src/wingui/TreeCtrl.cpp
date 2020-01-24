@@ -676,30 +676,18 @@ bool TreeCtrl::UpdateItem(TreeItem* ti) {
     return ok ? true : false;
 }
 
-static void PopulateTreeItem(TreeCtrl* tree, TreeItem* item, HTREEITEM parent) {
+static void PopulateTreeItemRec(TreeCtrl* tree, TreeItem* item, HTREEITEM parent) {
     int n = item->ChildCount();
     for (int i = 0; i < n; i++) {
         auto* ti = item->ChildAt(i);
         HTREEITEM h = insertItem(tree, parent, ti);
         auto v = std::make_tuple(ti, h);
         tree->insertedItems.push_back(v);
-        PopulateTreeItem(tree, ti, h);
+        PopulateTreeItemRec(tree, ti, h);
     }
 }
 
-static void PopulateTree(TreeCtrl* tree, TreeModel* tm) {
-    HTREEITEM parent = nullptr;
-    int n = tm->RootCount();
-    for (int i = 0; i < n; i++) {
-        auto* ti = tm->RootAt(i);
-        HTREEITEM h = insertItem(tree, parent, ti);
-        auto v = std::make_tuple(ti, h);
-        tree->insertedItems.push_back(v);
-        PopulateTreeItem(tree, ti, h);
-    }
-}
-
-void TreeCtrl::SetTreeModel(TreeModel* tm) {
+void TreeCtrl::SetTreeModel(TreeItem* tm) {
     CrashIf(!tm);
 
     SuspendRedraw();
@@ -708,7 +696,7 @@ void TreeCtrl::SetTreeModel(TreeModel* tm) {
     TreeView_DeleteAllItems(hwnd);
 
     treeModel = tm;
-    PopulateTree(this, tm);
+    PopulateTreeItemRec(this, tm, nullptr);
     ResumeRedraw();
 
     UINT flags = RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN;

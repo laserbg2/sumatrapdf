@@ -219,7 +219,7 @@ class EngineXps : public EngineBase {
     PageElement* GetElementAtPos(int pageNo, PointD pt) override;
 
     PageDestination* GetNamedDest(const WCHAR* name) override;
-    TocTree* GetToc() override;
+    TocItem* GetToc() override;
 
     static EngineBase* CreateFromFile(const WCHAR* fileName);
     static EngineBase* CreateFromStream(IStream* stream);
@@ -242,7 +242,7 @@ class EngineXps : public EngineBase {
 
     Vec<PageAnnotation> userAnnots;
 
-    TocTree* tocTree = nullptr;
+    TocItem* tocTree = nullptr;
 
     bool Load(const WCHAR* fileName);
     bool Load(IStream* stream);
@@ -898,18 +898,14 @@ TocItem* EngineXps::BuildTocTree(TocItem* parent, fz_outline* outline, int& idCo
     return root;
 }
 
-TocTree* EngineXps::GetToc() {
+TocItem* EngineXps::GetToc() {
     if (tocTree) {
         return tocTree;
     }
 
     int idCounter = 0;
     TocItem* root = BuildTocTree(nullptr, _outline, idCounter);
-    if (!root) {
-        return nullptr;
-    }
-    tocTree = new TocTree(root);
-    return tocTree;
+    return root;
 }
 
 bool EngineXps::HasClipOptimizations(int pageNo) {
