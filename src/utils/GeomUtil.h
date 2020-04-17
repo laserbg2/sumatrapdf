@@ -75,38 +75,72 @@ struct SizeT {
 
 template <typename T>
 struct RectT {
-    T x, y;
-    T dx, dy;
+    PointT<T> min{};
+    PointT<T> max{};
 
-    RectT() : x(0), y(0), dx(0), dy(0) {
+    RectT() = default;
+
+    RectT(T x, T y, T dx, T dy) {
+        min.x = x;
+        min.y = y;
+        max.x = x + dx;
+        max.y = y + dy;
     }
-    RectT(T x, T y, T dx, T dy) : x(x), y(y), dx(dx), dy(dy) {
-    }
+
     RectT(PointT<T> pt, SizeT<T> size) : x(pt.x), y(pt.y), dx(size.dx), dy(size.dy) {
     }
 
+    RectT(const RectT<T>& r) {
+        min.x = r.min.x;
+        min.y = r.min.y;
+        max.x = r.max.x;
+        max.y = r.max.y;
+    }
+
+    T X() const {
+        return min.x;
+    }
+
+    T Y() const {
+        return min.y;
+    }
+
     T Width() const {
-        return dx;
+        return max.x - min.x;
     }
 
     T Height() const {
-        return dy;
+        return max.y - min.y;
     }
 
     T Dx() const {
-        return dx;
+        return max.x - min.x;
     }
 
     T Dy() const {
-        return dy;
+        return max.y - min.y;
+    }
+
+    void SetDx(T dx) {
+        max.x = min.x + dx;
+    }
+
+    void SetDy(T dy) {
+        max.y = min.y + dy;
     }
 
     static RectT FromXY(T xs, T ys, T xe, T ye) {
-        if (xs > xe)
-            std::swap(xs, xe);
-        if (ys > ye)
-            std::swap(ys, ye);
-        return RectT(xs, ys, xe - xs, ye - ys);
+        T dx = xe - xs;
+        if (dx < 0) {
+            xs = xe;
+            dx = -dx;
+        }
+        T dy = ye - ys;
+        if (dy < 0) {
+            ys = ye;
+            dy = -dy;
+        }
+        return RectT(xs, ys, dx, dy);
     }
     static RectT FromXY(PointT<T> TL, PointT<T> BR) {
         return FromXY(TL.x, TL.y, BR.x, BR.y);
@@ -118,32 +152,33 @@ struct RectT {
     }
 
     RectT<int> ToInt() const {
-        return RectT<int>((int)floor(x + 0.5), (int)floor(y + 0.5), (int)floor(dx + 0.5), (int)floor(dy + 0.5));
+        return RectT<int>((int)floor(X() + 0.5), (int)floor(Y() + 0.5), (int)floor(Dx() + 0.5), (int)floor(Dy() + 0.5));
     }
     // cf. fz_roundrect in mupdf/fitz/base_geometry.c
 #ifndef FLT_EPSILON
 #define FLT_EPSILON 1.192092896e-07f
 #endif
     RectT<int> Round() const {
-        return RectT<int>::FromXY((int)floor(x + FLT_EPSILON), (int)floor(y + FLT_EPSILON),
-                                  (int)ceil(x + dx - FLT_EPSILON), (int)ceil(y + dy - FLT_EPSILON));
+        return RectT<int>::FromXY((int)floor(X() + FLT_EPSILON), (int)floor(Y() + FLT_EPSILON),
+                                  (int)ceil(X() + Dx() - FLT_EPSILON), (int)ceil(Y() + Dy() - FLT_EPSILON));
     }
 
     bool IsEmpty() const {
-        return dx == 0 || dy == 0;
+        return Dx() == 0 || Dy() == 0;
     }
     bool empty() const {
-        return dx == 0 || dy == 0;
+        return Dx() == 0 || Dy() == 0;
     }
 
     bool Contains(PointT<T> pt) const {
-        if (pt.x < this->x)
+        T x = pt.x; T y = pt.y;
+        if (x < this->X())
             return false;
-        if (pt.x > this->x + this->dx)
+        if (x > this->X() + this->Dx())
             return false;
-        if (pt.y < this->y)
+        if (y < this->Y())
             return false;
-        if (pt.y > this->y + this->dy)
+        if (y > this->Y() + this->Dy())
             return false;
         return true;
     }
@@ -152,10 +187,10 @@ struct RectT {
     RectT Intersect(RectT other) const {
         /* The intersection starts with the larger of the start coordinates
            and ends with the smaller of the end coordinates */
-        T _x = std::max(this->x, other.x);
-        T _y = std::max(this->y, other.y);
-        T _dx = std::min(this->x + this->dx, other.x + other.dx) - _x;
-        T _dy = std::min(this->y + this->dy, other.y + other.dy) - _y;
+        T _x = std::max(this->X(), other.X());
+        T _y = std::max(this->Y(), other.Y());
+        T _dx = std::min(this->X() + this->Dx(), other.X() + other.Dx()) - _x;
+        T _dy = std::min(this->Y() + this->Dy(), other.Y() + other.Dy()) - _y;
 
         /* return an empty rectangle if the dimensions aren't positive */
         if (_dx <= 0 || _dy <= 0)
@@ -164,31 +199,31 @@ struct RectT {
     }
 
     RectT Union(RectT other) const {
-        if (this->dx <= 0 && this->dy <= 0)
+        if (this->Dx() <= 0 && this->Dy() <= 0)
             return other;
-        if (other.dx <= 0 && other.dy <= 0)
+        if (other.Dx() <= 0 && other.Dy() <= 0)
             return *this;
 
         /* The union starts with the smaller of the start coordinates
            and ends with the larger of the end coordinates */
-        T _x = std::min(this->x, other.x);
-        T _y = std::min(this->y, other.y);
-        T _dx = std::max(this->x + this->dx, other.x + other.dx) - _x;
-        T _dy = std::max(this->y + this->dy, other.y + other.dy) - _y;
+        T _x = std::min(this->X(), other.x());
+        T _y = std::min(this->Y(), other.Y());
+        T _dx = std::max(this->X() + this->Dx(), other.x() + other.Dx()) - _x;
+        T _dy = std::max(this->Y() + this->Dy(), other.Y() + other.Dy()) - _y;
 
         return RectT(_x, _y, _dx, _dy);
     }
 
     void Offset(T _x, T _y) {
-        x += _x;
-        y += _y;
+        min.x += _x;
+        min.y += _y;
     }
 
     void Inflate(T _x, T _y) {
-        x -= _x;
-        dx += 2 * _x;
-        y -= _y;
-        dy += 2 * _y;
+        min.x -= _x;
+        max.x += _x;
+        min.y -= _y;
+        max.y += _y;
     }
 
     PointT<T> TL() const {
@@ -204,7 +239,7 @@ struct RectT {
 #ifdef _WIN32
     RECT ToRECT() const {
         RectT<int> rectI(this->ToInt());
-        RECT result = {rectI.x, rectI.y, rectI.x + rectI.dx, rectI.y + rectI.dy};
+        RECT result = {rectI.X(), rectI.Y(), rectI.X() + rectI.Dx(), rectI.Y() + rectI.Dy()};
         return result;
     }
     static RectT FromRECT(const RECT& rect) {
@@ -214,17 +249,17 @@ struct RectT {
 #if 1 // def GDIPVER, note: GDIPVER not defined in mingw?
     Gdiplus::Rect ToGdipRect() const {
         RectT<int> rect(this->ToInt());
-        return Gdiplus::Rect(rect.x, rect.y, rect.dx, rect.dy);
+        return Gdiplus::Rect(rect.X(), rect.Y(), rect.Dx(), rect.Dy());
     }
     Gdiplus::RectF ToGdipRectF() const {
         RectT<float> rectF(this->Convert<float>());
-        return Gdiplus::RectF(rectF.x, rectF.y, rectF.dx, rectF.dy);
+        return Gdiplus::RectF(rectF.X(), rectF.Y(), rectF.Dx(), rectF.Dy());
     }
 #endif
 #endif
 
     bool operator==(const RectT<T>& other) const {
-        return this->x == other.x && this->y == other.y && this->dx == other.dx && this->dy == other.dy;
+        return this->X() == other.X() && this->Y() == other.Y() && this->Dx() == other.Dx() && this->Dy() == other.Dy();
     }
     bool operator!=(const RectT<T>& other) const {
         return !this->operator==(other);
@@ -247,31 +282,17 @@ inline SIZE ToSIZE(SizeI s) {
 }
 #ifdef _WIN32
 
-class ClientRect : public RectI {
-  public:
-    explicit ClientRect(HWND hwnd) {
-        RECT rc;
-        if (GetClientRect(hwnd, &rc)) {
-            x = rc.left;
-            dx = rc.right - rc.left;
-            y = rc.top;
-            dy = rc.bottom - rc.top;
-        }
-    }
-};
+inline RectI ClientRect(HWND hwnd) {
+    RECT rc{};
+    GetClientRect(hwnd, &rc);
+    return RectI::FromRECT(rc);
+}
 
-class WindowRect : public RectI {
-  public:
-    explicit WindowRect(HWND hwnd) {
-        RECT rc;
-        if (GetWindowRect(hwnd, &rc)) {
-            x = rc.left;
-            dx = rc.right - rc.left;
-            y = rc.top;
-            dy = rc.bottom - rc.top;
-        }
-    }
-};
+inline RectI WindowRect(HWND hwnd) {
+    RECT rc{};
+    GetWindowRect(hwnd, &rc);
+    return RectI::FromRECT(rc);
+}
 
 inline RectI MapRectToWindow(RectI rect, HWND hwndFrom, HWND hwndTo) {
     RECT rc = rect.ToRECT();
